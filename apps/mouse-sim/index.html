@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src http://127.0.0.1:17321; style-src 'unsafe-inline'" />
+    <title>Cobraa mouse</title>
+    <style>
+      :root {
+        --bg: #0b1220;
+        --panel: #121a2b;
+        --line: #243049;
+        --text: #e8eefc;
+        --muted: #93a0bb;
+        --ai: #38bdf8;
+        --tr: #34d399;
+        --ocr: #fbbf24;
+        --voice: #f472b6;
+      }
+      * { box-sizing: border-box; }
+      html, body {
+        margin: 0;
+        height: 100%;
+        background: var(--bg);
+        color: var(--text);
+        font: 13px/1.35 "Segoe UI", system-ui, sans-serif;
+        user-select: none;
+      }
+      .shell {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        padding: 10px;
+        gap: 10px;
+      }
+      header {
+        -webkit-app-region: drag;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 4px 2px 2px;
+      }
+      .title {
+        font-weight: 700;
+        letter-spacing: 0.02em;
+      }
+      .sub { color: var(--muted); font-size: 11px; margin-top: 2px; }
+      .win-btns { -webkit-app-region: no-drag; display: flex; gap: 6px; }
+      .win-btns button {
+        width: 22px;
+        height: 22px;
+        border: 0;
+        border-radius: 6px;
+        background: #1c2740;
+        color: var(--text);
+        cursor: pointer;
+      }
+      .status {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 10px;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        background: var(--panel);
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 99px;
+        background: #f87171;
+      }
+      .dot.on { background: #34d399; box-shadow: 0 0 10px #34d39988; }
+      .keys { display: flex; flex-direction: column; gap: 8px; flex: 1; }
+      .key {
+        -webkit-app-region: no-drag;
+        appearance: none;
+        border: 1px solid var(--line);
+        background: linear-gradient(180deg, #182238, #111827);
+        color: var(--text);
+        border-radius: 16px;
+        min-height: 72px;
+        padding: 12px 14px;
+        text-align: left;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: transform 0.08s ease, border-color 0.08s ease, box-shadow 0.08s ease;
+      }
+      .key:active, .key.held {
+        transform: scale(0.98);
+        box-shadow: inset 0 0 0 1px #ffffff22;
+      }
+      .key[data-id="1"] { border-color: #155e75; }
+      .key[data-id="2"] { border-color: #166534; }
+      .key[data-id="3"] { border-color: #854d0e; }
+      .key[data-id="4"] { border-color: #9d174d; }
+      .key:active[data-id="1"], .key.held[data-id="1"] { background: #082f49; }
+      .key:active[data-id="2"], .key.held[data-id="2"] { background: #052e16; }
+      .key:active[data-id="3"], .key.held[data-id="3"] { background: #422006; }
+      .key:active[data-id="4"], .key.held[data-id="4"] { background: #500724; }
+      .glyph {
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+        display: grid;
+        place-items: center;
+        font-weight: 800;
+        color: #061018;
+        flex: 0 0 auto;
+      }
+      .key[data-id="1"] .glyph { background: var(--ai); }
+      .key[data-id="2"] .glyph { background: var(--tr); }
+      .key[data-id="3"] .glyph { background: var(--ocr); }
+      .key[data-id="4"] .glyph { background: var(--voice); }
+      .meta { min-width: 0; }
+      .label { font-weight: 700; font-size: 14px; }
+      .hint { color: var(--muted); font-size: 11px; margin-top: 2px; }
+      footer {
+        color: var(--muted);
+        font-size: 10px;
+        text-align: center;
+        padding-bottom: 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <header>
+        <div>
+          <div class="title">Cobraa mouse</div>
+          <div class="sub">Always-on-top extra buttons</div>
+        </div>
+        <div class="win-btns">
+          <button id="close" title="Close simulator">×</button>
+        </div>
+      </header>
+      <div class="status">
+        <span class="dot" id="dot"></span>
+        <span id="status">Waiting for Cobraa…</span>
+      </div>
+      <div class="keys">
+        <button class="key" data-id="1" type="button">
+          <span class="glyph">1</span>
+          <span class="meta">
+            <div class="label">AI chat</div>
+            <div class="hint">Click open · double focus</div>
+          </span>
+        </button>
+        <button class="key" data-id="2" type="button">
+          <span class="glyph">2</span>
+          <span class="meta">
+            <div class="label">Translate</div>
+            <div class="hint">Click clipboard · double run</div>
+          </span>
+        </button>
+        <button class="key" data-id="3" type="button">
+          <span class="glyph">3</span>
+          <span class="meta">
+            <div class="label">OCR</div>
+            <div class="hint">Click capture · double page</div>
+          </span>
+        </button>
+        <button class="key" data-id="4" type="button">
+          <span class="glyph">4</span>
+          <span class="meta">
+            <div class="label">Voice</div>
+            <div class="hint">Click toggle · hold to talk</div>
+          </span>
+        </button>
+      </div>
+      <footer>Keys 1–4 also work · keep Cobraa running</footer>
+    </div>
+    <script>
+      const PORT = 17321
+      const statusEl = document.getElementById('status')
+      const dot = document.getElementById('dot')
+      let connected = false
+      const held = new Set()
+
+      async function send(button, down) {
+        const res = await fetch('http://127.0.0.1:' + PORT + '/button', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ button, down })
+        })
+        if (!res.ok) throw new Error('HTTP ' + res.status)
+        connected = true
+        statusEl.textContent = 'Connected to Cobraa'
+        dot.classList.add('on')
+      }
+
+      async function ping() {
+        try {
+          const res = await fetch('http://127.0.0.1:' + PORT + '/health')
+          connected = res.ok
+        } catch {
+          connected = false
+        }
+        statusEl.textContent = connected ? 'Connected to Cobraa' : 'Waiting for Cobraa… start npm run dev'
+        dot.classList.toggle('on', connected)
+      }
+
+      async function down(id, el) {
+        el.classList.add('held')
+        held.add(id)
+        try {
+          await send(id, true)
+        } catch {
+          connected = false
+          statusEl.textContent = 'Cobraa is not running'
+          dot.classList.remove('on')
+        }
+      }
+
+      async function up(id, el) {
+        el.classList.remove('held')
+        if (!held.has(id)) return
+        held.delete(id)
+        try {
+          await send(id, false)
+        } catch {
+          // ignore
+        }
+      }
+
+      for (const el of document.querySelectorAll('.key')) {
+        const id = Number(el.getAttribute('data-id'))
+        el.addEventListener('pointerdown', (e) => {
+          e.preventDefault()
+          el.setPointerCapture(e.pointerId)
+          void down(id, el)
+        })
+        el.addEventListener('pointerup', () => void up(id, el))
+        el.addEventListener('pointercancel', () => void up(id, el))
+        el.addEventListener('lostpointercapture', () => void up(id, el))
+      }
+
+      window.addEventListener('keydown', (e) => {
+        if (e.repeat) return
+        const id = { Digit1: 1, Digit2: 2, Digit3: 3, Digit4: 4, Numpad1: 1, Numpad2: 2, Numpad3: 3, Numpad4: 4 }[e.code]
+        if (!id) return
+        const el = document.querySelector('.key[data-id="' + id + '"]')
+        void down(id, el)
+      })
+      window.addEventListener('keyup', (e) => {
+        const id = { Digit1: 1, Digit2: 2, Digit3: 3, Digit4: 4, Numpad1: 1, Numpad2: 2, Numpad3: 3, Numpad4: 4 }[e.code]
+        if (!id) return
+        const el = document.querySelector('.key[data-id="' + id + '"]')
+        void up(id, el)
+      })
+
+      document.getElementById('close').addEventListener('click', () => window.close())
+      setInterval(ping, 1500)
+      void ping()
+    </script>
+  </body>
+</html>

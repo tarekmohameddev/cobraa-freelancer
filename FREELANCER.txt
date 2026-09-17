@@ -1,0 +1,27 @@
+Cobraa freelancer workspace
+===========================
+
+Live vendor APIs, signing keys, and the real hostname have been removed.
+The app talks to recorded/fake responses only.
+
+1. npm install
+2. npm run dev
+3. In a second terminal: npm run mouse-sim
+
+Login: any email + any password (or the "Continue with mock account" button).
+
+Mouse simulator
+---------------
+A small always-on-top window fires the same 4 extra-button signals as the
+physical prototype:
+
+  1  AI chat
+  2  Translate
+  3  OCR
+  4  Voice (hold to talk)
+
+Cobraa must be running first so the simulator can connect to
+http://127.0.0.1:17321
+
+Recorded replies live in fixtures/api/recorded/. If a request has no
+recording, a built-in fake response is used so UI work can continue.
