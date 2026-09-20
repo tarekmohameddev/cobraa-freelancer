@@ -4,7 +4,7 @@ const LONG_MS = 500
 const DOUBLE_MS = 340
 const REPEAT_MS = 90
 
-const HOLD_ACTIONS = new Set<MouseAction>(['voice'])
+const HOLD_ACTIONS = new Set<MouseAction>(['voice', 'ai', 'translate'])
 
 type Slot = {
   action: MouseAction

@@ -15,7 +15,7 @@ const OCR_LANGUAGES = [
 ]
 
 const SELECT_CLS =
-  'rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100'
+  'rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00007B]/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100'
 
 const MAX_BYTES = 8 * 1024 * 1024
 
@@ -184,7 +184,7 @@ export function OcrPage({ onSendToTranslate }: { onSendToTranslate: (text: strin
           className={[
             'flex flex-1 cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed transition-colors select-none',
             dragging
-              ? 'border-emerald-400 bg-emerald-50/50 dark:border-emerald-600 dark:bg-emerald-950/20'
+              ? 'border-[#00007B]/50 bg-[#00007B]/5 dark:border-[#00007B]/60 dark:bg-[#00007B]/20'
               : 'border-zinc-200 bg-zinc-50/50 hover:border-zinc-300 hover:bg-zinc-100/50 dark:border-zinc-700 dark:bg-zinc-900/20 dark:hover:border-zinc-600'
           ].join(' ')}
         >
@@ -251,7 +251,7 @@ export function OcrPage({ onSendToTranslate }: { onSendToTranslate: (text: strin
               >
                 {copied ? (
                   <>
-                    <Check className="h-3.5 w-3.5 text-emerald-600" />
+                    <Check className="h-3.5 w-3.5 text-[#00007B] dark:text-blue-400" />
                     Copied!
                   </>
                 ) : (
@@ -266,7 +266,7 @@ export function OcrPage({ onSendToTranslate }: { onSendToTranslate: (text: strin
                 type="button"
                 onClick={() => onSendToTranslate(extractedText)}
                 disabled={!extractedText}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-[#00007B] px-3 py-2 text-sm font-semibold text-white shadow-sm shadow-[#00007B]/20 transition hover:bg-[#000060] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Languages className="h-3.5 w-3.5" />
                 Translate this

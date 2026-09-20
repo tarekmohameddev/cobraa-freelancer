@@ -40,6 +40,10 @@ const api = {
 
   // Quick Capture
   quickCaptureStart: () => ipcRenderer.invoke('quickCapture:start'),
+  quickCaptureCrop: (bounds: { x: number; y: number; width: number; height: number }) =>
+    ipcRenderer.invoke('quickCapture:crop', bounds),
+  quickCaptureSaveImage: (imageBase64: string) =>
+    ipcRenderer.invoke('quickCapture:saveImage', imageBase64),
   quickCaptureRegionSelected: (bounds: { x: number; y: number; width: number; height: number }) =>
     ipcRenderer.invoke('quickCapture:regionSelected', bounds),
   quickCaptureCancel: () => ipcRenderer.invoke('quickCapture:cancel'),
@@ -51,6 +55,44 @@ const api = {
     const handler = (_evt: unknown, data: unknown) => cb(data)
     ipcRenderer.on('quickCapture:result', handler)
     return () => ipcRenderer.removeListener('quickCapture:result', handler)
+  },
+
+  // AI Quick Overlay
+  aiOverlayClose: () => ipcRenderer.invoke('aiOverlay:close'),
+  aiOverlayGetData: () => ipcRenderer.invoke('aiOverlay:getData'),
+  aiOverlaySend: (text: string) => ipcRenderer.invoke('aiOverlay:send', text),
+  onAiOverlayData: (cb: (data: { text: string }) => void) => {
+    const handler = (_evt: unknown, data: any) => cb(data)
+    ipcRenderer.on('aiOverlay:data', handler)
+    return () => ipcRenderer.removeListener('aiOverlay:data', handler)
+  },
+  onChatAutoSend: (cb: (data: { text: string }) => void) => {
+    const handler = (_evt: unknown, data: any) => cb(data)
+    ipcRenderer.on('chat:autoSend', handler)
+    return () => ipcRenderer.removeListener('chat:autoSend', handler)
+  },
+
+  // Voice Overlay & Dictation
+  voiceOverlayGetData: () => ipcRenderer.invoke('voiceOverlay:getData'),
+  onVoiceOverlayData: (cb: (data: { status: 'idle' | 'listening' | 'processing' | 'done'; language: string; transcript: string }) => void) => {
+    const handler = (_evt: unknown, data: any) => cb(data)
+    ipcRenderer.on('voiceOverlay:data', handler)
+    return () => ipcRenderer.removeListener('voiceOverlay:data', handler)
+  },
+  voiceDictationStart: () => ipcRenderer.invoke('voiceDictation:start'),
+  voiceDictationStop: () => ipcRenderer.invoke('voiceDictation:stop'),
+  voiceDictationToggleLang: () => ipcRenderer.invoke('voiceDictation:toggleLang'),
+  voiceDictationSetLang: (lang: string) => ipcRenderer.invoke('voiceDictation:setLang', lang),
+  voiceDictationGetLang: () => ipcRenderer.invoke('voiceDictation:getLang'),
+  onVoiceDictationStartRecording: (cb: (data: { language: string }) => void) => {
+    const handler = (_evt: unknown, data: any) => cb(data)
+    ipcRenderer.on('voiceDictation:startRecording', handler)
+    return () => ipcRenderer.removeListener('voiceDictation:startRecording', handler)
+  },
+  onVoiceDictationStopRecording: (cb: () => void) => {
+    const handler = () => cb()
+    ipcRenderer.on('voiceDictation:stopRecording', handler)
+    return () => ipcRenderer.removeListener('voiceDictation:stopRecording', handler)
   },
 
   mouseStatus: () => ipcRenderer.invoke('mouse:status'),
@@ -71,7 +113,10 @@ const api = {
     return () => ipcRenderer.removeListener('mouse:status', handler)
   },
 
-  apiMode: () => ipcRenderer.invoke('dev:apiMode')
+  apiMode: () => ipcRenderer.invoke('dev:apiMode'),
+
+  settingsGet: () => ipcRenderer.invoke('settings:get'),
+  settingsSet: (partial: Record<string, string>) => ipcRenderer.invoke('settings:set', partial)
 }
 
 contextBridge.exposeInMainWorld('api', api)

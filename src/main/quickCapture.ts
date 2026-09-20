@@ -1,5 +1,6 @@
-import { BrowserWindow, desktopCapturer, screen } from 'electron'
+import { BrowserWindow, desktopCapturer, screen, dialog, clipboard, nativeImage } from 'electron'
 import path from 'node:path'
+import fs from 'node:fs'
 import { performOcr } from './ocr'
 import { translateText } from './translate'
 import { debugLog } from './debug'
@@ -7,6 +8,7 @@ import { debugLog } from './debug'
 let overlayWin: BrowserWindow | null = null
 let resultWin: BrowserWindow | null = null
 let mainWin: BrowserWindow | null = null
+let capturedDesktopImage: Electron.NativeImage | null = null
 
 export type QuickCaptureResultData = {
   loading: boolean
@@ -37,6 +39,25 @@ export async function startQuickCapture(): Promise<void> {
   await new Promise<void>((r) => setTimeout(r, 200))
 
   const display = screen.getPrimaryDisplay()
+  const { scaleFactor } = display
+  const { width: sw, height: sh } = display.size
+
+  try {
+    const sources = await desktopCapturer.getSources({
+      types: ['screen'],
+      thumbnailSize: {
+        width: Math.round(sw * scaleFactor),
+        height: Math.round(sh * scaleFactor)
+      }
+    })
+
+    if (sources.length > 0) {
+      capturedDesktopImage = sources[0].thumbnail
+    }
+  } catch (err: any) {
+    debugLog('quickCapture.desktopCaptureError', { error: err?.message })
+  }
+
   const { x, y, width, height } = display.bounds
 
   overlayWin = new BrowserWindow({
@@ -73,15 +94,76 @@ export async function startQuickCapture(): Promise<void> {
   overlayWin.focus()
 }
 
+export function cropSelectedRegion(bounds: {
+  x: number
+  y: number
+  width: number
+  height: number
+}): string {
+  if (!capturedDesktopImage) throw new Error('No desktop image captured')
+  const display = screen.getPrimaryDisplay()
+  const { scaleFactor } = display
+  const cropRect = {
+    x: Math.max(0, Math.round(bounds.x * scaleFactor)),
+    y: Math.max(0, Math.round(bounds.y * scaleFactor)),
+    width: Math.max(1, Math.round(bounds.width * scaleFactor)),
+    height: Math.max(1, Math.round(bounds.height * scaleFactor))
+  }
+
+  const cropped = capturedDesktopImage.crop(cropRect)
+  const dataUrl = cropped.toDataURL()
+  return dataUrl.split(',')[1] ?? ''
+}
+
+export async function saveCapturedImage(
+  imageBase64: string
+): Promise<{ ok: boolean; canceled?: boolean; filePath?: string; error?: string }> {
+  try {
+    const imgBuffer = Buffer.from(imageBase64, 'base64')
+    try {
+      const nImg = nativeImage.createFromBuffer(imgBuffer)
+      clipboard.writeImage(nImg)
+    } catch {}
+
+    const defaultFilename = `screenshot_${new Date().toISOString().replace(/[:.]/g, '-')}.png`
+    const saveOptions: Electron.SaveDialogOptions = {
+      title: 'حفظ لقطة الشاشة',
+      defaultPath: defaultFilename,
+      filters: [
+        { name: 'PNG Image', extensions: ['png'] },
+        { name: 'JPEG Image', extensions: ['jpg', 'jpeg'] }
+      ]
+    }
+    const targetWin =
+      overlayWin && !overlayWin.isDestroyed()
+        ? overlayWin
+        : mainWin && !mainWin.isDestroyed()
+          ? mainWin
+          : null
+
+    const { canceled, filePath } = targetWin
+      ? await dialog.showSaveDialog(targetWin, saveOptions)
+      : await dialog.showSaveDialog(saveOptions)
+
+    if (canceled || !filePath) {
+      return { ok: false, canceled: true }
+    }
+
+    await fs.promises.writeFile(filePath, imgBuffer)
+    return { ok: true, filePath }
+  } catch (err: any) {
+    return { ok: false, error: err?.message || 'Failed to save image' }
+  }
+}
+
 export async function handleRegionSelected(bounds: {
   x: number
   y: number
   width: number
   height: number
 }): Promise<void> {
+  // Kept for backward compatibility if ever called
   closeOverlay()
-
-  // Open result window in loading state immediately
   setAndPush({ loading: true, imageBase64: '', ocrText: '', translatedText: '', toLang: 'en', error: null })
   openResultWindow()
 
@@ -209,6 +291,7 @@ function openResultWindow(): void {
 }
 
 function closeOverlay(): void {
+  capturedDesktopImage = null
   if (overlayWin && !overlayWin.isDestroyed()) {
     overlayWin.close()
     overlayWin = null

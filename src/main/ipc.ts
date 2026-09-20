@@ -9,11 +9,27 @@ import { performOcr, type OcrInput } from './ocr'
 import {
   cancelCapture,
   closeResultWindow,
+  cropSelectedRegion,
   getPendingData,
   handleRegionSelected,
   retranslate,
+  saveCapturedImage,
   startQuickCapture
 } from './quickCapture'
+import {
+  closeAiOverlay,
+  getAiOverlayData,
+  openAiOverlay,
+  submitAiOverlay
+} from './aiOverlay'
+import { getVoiceOverlayData } from './voiceOverlay'
+import {
+  getVoiceLanguage,
+  setVoiceLanguage,
+  startVoiceDictation,
+  stopVoiceDictation,
+  toggleVoiceLanguage
+} from './voiceDictation'
 import {
   cancelLearn,
   clearAllBindings,
@@ -23,6 +39,7 @@ import {
 } from './mouseButtons'
 import type { MouseAction } from './mouseButtons/types'
 import { getApiMode, isMockMode } from './api/config'
+import { getSettings, updateSettings, type AppSettings } from './settings'
 
 export function registerIpcHandlers(win: BrowserWindow) {
   const channels = [
@@ -36,6 +53,8 @@ export function registerIpcHandlers(win: BrowserWindow) {
     'translate:text',
     'ocr:image',
     'quickCapture:start',
+    'quickCapture:crop',
+    'quickCapture:saveImage',
     'quickCapture:regionSelected',
     'quickCapture:cancel',
     'quickCapture:close',
@@ -46,7 +65,9 @@ export function registerIpcHandlers(win: BrowserWindow) {
     'mouse:cancelLearn',
     'mouse:clearBinding',
     'mouse:clearAll',
-    'dev:apiMode'
+    'dev:apiMode',
+    'settings:get',
+    'settings:set'
   ] as const
   for (const ch of channels) {
     try {
@@ -157,6 +178,19 @@ export function registerIpcHandlers(win: BrowserWindow) {
     }
   })
 
+  ipcMain.handle('quickCapture:crop', async (_evt, bounds: { x: number; y: number; width: number; height: number }) => {
+    try {
+      const imageBase64 = cropSelectedRegion(bounds)
+      return { ok: true as const, imageBase64 }
+    } catch (e: any) {
+      return { ok: false as const, error: e?.message || 'Crop failed' }
+    }
+  })
+
+  ipcMain.handle('quickCapture:saveImage', async (_evt, imageBase64: string) => {
+    return await saveCapturedImage(imageBase64)
+  })
+
   ipcMain.handle('quickCapture:regionSelected', async (_evt, bounds: { x: number; y: number; width: number; height: number }) => {
     try {
       await handleRegionSelected(bounds)
@@ -189,6 +223,47 @@ export function registerIpcHandlers(win: BrowserWindow) {
     return getPendingData()
   })
 
+  // AI Quick Overlay
+  ipcMain.handle('aiOverlay:open', (_evt, initialText?: string) => {
+    openAiOverlay(initialText)
+    return { ok: true as const }
+  })
+  ipcMain.handle('aiOverlay:close', () => {
+    closeAiOverlay()
+    return { ok: true as const }
+  })
+  ipcMain.handle('aiOverlay:getData', () => {
+    return getAiOverlayData()
+  })
+  ipcMain.handle('aiOverlay:send', (_evt, text: string) => {
+    submitAiOverlay(text)
+    return { ok: true as const }
+  })
+
+  // Voice Overlay & Dictation
+  ipcMain.handle('voiceOverlay:getData', () => {
+    return getVoiceOverlayData()
+  })
+  ipcMain.handle('voiceDictation:start', async () => {
+    await startVoiceDictation()
+    return { ok: true as const }
+  })
+  ipcMain.handle('voiceDictation:stop', async () => {
+    await stopVoiceDictation()
+    return { ok: true as const }
+  })
+  ipcMain.handle('voiceDictation:toggleLang', () => {
+    const lang = toggleVoiceLanguage()
+    return { ok: true as const, language: lang }
+  })
+  ipcMain.handle('voiceDictation:setLang', (_evt, lang: string) => {
+    setVoiceLanguage(lang)
+    return { ok: true as const }
+  })
+  ipcMain.handle('voiceDictation:getLang', () => {
+    return { ok: true as const, language: getVoiceLanguage() }
+  })
+
   ipcMain.handle('mouse:status', () => getStatus())
   ipcMain.handle('mouse:startLearn', (_evt, action: MouseAction) => {
     startLearn(action)
@@ -212,5 +287,13 @@ export function registerIpcHandlers(win: BrowserWindow) {
     mode: getApiMode(),
     mock: isMockMode()
   }))
-}
 
+  ipcMain.handle('settings:get', () => {
+    return getSettings()
+  })
+
+  ipcMain.handle('settings:set', (_evt, partial: Partial<AppSettings>) => {
+    const updated = updateSettings(partial)
+    return { ok: true as const, settings: updated }
+  })
+}

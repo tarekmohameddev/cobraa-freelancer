@@ -50,6 +50,12 @@ export type QuickCaptureResultData = {
   error: string | null
 }
 
+export type AppSettings = {
+  recognizeLan: string
+  tranLan: string
+  voiceLan: string
+}
+
 export type MouseAction = 'translate' | 'ai' | 'voice' | 'ocr'
 export type MouseGesture = 'down' | 'up' | 'click' | 'double' | 'long'
 
@@ -58,6 +64,10 @@ export type MouseButtonEvent = {
   gesture: MouseGesture
   signature: string
   clipboardText?: string
+  originalText?: string
+  translatedText?: string
+  from?: string
+  to?: string
 }
 
 export type MouseServiceStatus = {
@@ -98,6 +108,18 @@ export type CobraaAPI = {
 
   // Quick Capture
   quickCaptureStart: () => Promise<{ ok: true } | { ok: false; error: string }>
+  quickCaptureCrop: (bounds: {
+    x: number
+    y: number
+    width: number
+    height: number
+  }) => Promise<{ ok: true; imageBase64: string } | { ok: false; error: string }>
+  quickCaptureSaveImage: (imageBase64: string) => Promise<{
+    ok: boolean
+    canceled?: boolean
+    filePath?: string
+    error?: string
+  }>
   quickCaptureRegionSelected: (bounds: {
     x: number
     y: number
@@ -114,6 +136,23 @@ export type CobraaAPI = {
   quickCaptureGetData: () => Promise<QuickCaptureResultData | null>
   onQuickCaptureResult: (cb: (data: QuickCaptureResultData) => void) => () => void
 
+  // AI Quick Overlay
+  aiOverlayClose: () => Promise<{ ok: true }>
+  aiOverlayGetData: () => Promise<{ text: string }>
+  aiOverlaySend: (text: string) => Promise<{ ok: true }>
+  onAiOverlayData: (cb: (data: { text: string }) => void) => () => void
+  onChatAutoSend: (cb: (data: { text: string }) => void) => () => void
+  // Voice Overlay & Dictation
+  voiceOverlayGetData: () => Promise<{ status: 'idle' | 'listening' | 'processing' | 'done'; language: string; transcript: string }>
+  onVoiceOverlayData: (cb: (data: { status: 'idle' | 'listening' | 'processing' | 'done'; language: string; transcript: string }) => void) => () => void
+  voiceDictationStart: () => Promise<{ ok: true }>
+  voiceDictationStop: () => Promise<{ ok: true }>
+  voiceDictationToggleLang: () => Promise<{ ok: true; language: string }>
+  voiceDictationSetLang: (lang: string) => Promise<{ ok: true }>
+  voiceDictationGetLang: () => Promise<{ ok: true; language: string }>
+  onVoiceDictationStartRecording: (cb: (data: { language: string }) => void) => () => void
+  onVoiceDictationStopRecording: (cb: () => void) => () => void
+
   mouseStatus: () => Promise<MouseServiceStatus>
   mouseStartLearn: (action: MouseAction) => Promise<{ ok: true }>
   mouseCancelLearn: () => Promise<{ ok: true }>
@@ -122,6 +161,9 @@ export type CobraaAPI = {
   onMouseButton: (cb: (evt: MouseButtonEvent) => void) => () => void
   onMouseStatus: (cb: (evt: MouseServiceStatus) => void) => () => void
   apiMode: () => Promise<{ ok: true; mode: 'live' | 'record' | 'mock'; mock: boolean }>
+
+  settingsGet: () => Promise<AppSettings>
+  settingsSet: (partial: Partial<AppSettings>) => Promise<{ ok: true; settings: AppSettings }>
 }
 
 export function getApi(): CobraaAPI {

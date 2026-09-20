@@ -15,6 +15,7 @@ type Session = {
   ws: WebSocket | null
   language: string
   tranLan: string
+  translate: boolean
   initialized: boolean
   mock: boolean
   timers: ReturnType<typeof setTimeout>[]
@@ -23,9 +24,26 @@ type Session = {
 
 let session: Session | null = null
 let emit: ((evt: SpeechEvent) => void) | null = null
+const speechListeners = new Set<(evt: SpeechEvent) => void>()
 
 export function setSpeechEmitter(fn: (evt: SpeechEvent) => void) {
   emit = fn
+}
+
+export function addSpeechListener(fn: (evt: SpeechEvent) => void): () => void {
+  speechListeners.add(fn)
+  return () => speechListeners.delete(fn)
+}
+
+function dispatchSpeechEvent(evt: SpeechEvent) {
+  emit?.(evt)
+  for (const listener of speechListeners) {
+    try {
+      listener(evt)
+    } catch {
+      // ignore
+    }
+  }
 }
 
 function mapTranLan(language: string) {
@@ -54,51 +72,63 @@ function closeSession() {
   }
 }
 
-function startMockSpeech() {
+function startMockSpeech(lang: string = 'en-US', tranLan: string = 'English', translate: boolean = false) {
+  const isAr = (lang || '').toLowerCase().startsWith('ar')
+  const mockText = isAr
+    ? 'مرحباً، تم تحويل الصوت إلى نص بنجاح.'
+    : speechTranscript
+
   const s: Session = {
     ws: null,
-    language: 'en-US',
-    tranLan: 'Chinese',
+    language: lang,
+    tranLan,
+    translate,
     initialized: true,
     mock: true,
     timers: [],
     finalSent: false
   }
   session = s
-  emit?.({ type: 'status', value: 'connected' })
+  dispatchSpeechEvent({ type: 'status', value: 'connected' })
   s.timers.push(
     setTimeout(() => {
       if (session !== s) return
-      emit?.({ type: 'partial', value: speechTranscript.slice(0, 12) })
+      dispatchSpeechEvent({ type: 'partial', value: mockText.slice(0, Math.min(12, mockText.length)) })
     }, 280)
   )
   s.timers.push(
     setTimeout(() => {
       if (session !== s) return
       s.finalSent = true
-      emit?.({ type: 'final', value: speechTranscript })
-    }, 900)
+      dispatchSpeechEvent({ type: 'final', value: mockText })
+    }, 850)
   )
 }
 
-export async function speechStart(input?: { language?: string }) {
+export type SpeechStartInput = {
+  language?: string
+  tranLan?: string
+  translate?: boolean
+}
+
+export async function speechStart(input?: SpeechStartInput) {
   closeSession()
+  const language = input?.language || 'en-US'
+  const tranLan = input?.tranLan || mapTranLan(language)
+  const translate = Boolean(input?.translate)
 
   if (isMockMode()) {
-    startMockSpeech()
-    if (session) session.language = input?.language || 'en-US'
+    startMockSpeech(language, tranLan, translate)
     return { ok: true as const }
   }
 
-  const language = input?.language || 'en-US'
-  const tranLan = mapTranLan(language)
   const url = speechWsBase() + randomUUID()
 
   const ws = new WebSocket(url)
-  session = { ws, language, tranLan, initialized: false, mock: false, timers: [], finalSent: false }
+  session = { ws, language, tranLan, translate, initialized: false, mock: false, timers: [], finalSent: false }
 
   ws.on('open', () => {
-    emit?.({ type: 'status', value: 'connected' })
+    dispatchSpeechEvent({ type: 'status', value: 'connected' })
   })
 
   ws.on('message', (data: WebSocket.RawData) => {
@@ -106,7 +136,7 @@ export async function speechStart(input?: { language?: string }) {
     try {
       const msg: any = JSON.parse(text)
       if (msg?.success === false) {
-        emit?.({
+        dispatchSpeechEvent({
           type: 'error',
           value: msg?.message || msg?.msg || 'Speech backend returned error.',
           raw: msg
@@ -115,30 +145,30 @@ export async function speechStart(input?: { language?: string }) {
       }
 
       if (msg?.status === 'recognizing') {
-        emit?.({ type: 'partial', value: msg?.data || '' })
+        dispatchSpeechEvent({ type: 'partial', value: msg?.data || '' })
         return
       }
       if (msg?.status === 'recognized') {
-        emit?.({ type: 'final', value: msg?.data || '' })
+        dispatchSpeechEvent({ type: 'final', value: msg?.data || '' })
         return
       }
       if (msg?.status === 'end') {
-        emit?.({ type: 'end' })
+        dispatchSpeechEvent({ type: 'end' })
         return
       }
 
-      emit?.({ type: 'raw', value: msg })
+      dispatchSpeechEvent({ type: 'raw', value: msg })
     } catch (e: any) {
-      emit?.({ type: 'error', value: `Parse speech response failed: ${e?.message || String(e)}` })
+      dispatchSpeechEvent({ type: 'error', value: `Parse speech response failed: ${e?.message || String(e)}` })
     }
   })
 
   ws.on('error', (err: Error) => {
-    emit?.({ type: 'error', value: err?.message || 'WebSocket error' })
+    dispatchSpeechEvent({ type: 'error', value: err?.message || 'WebSocket error' })
   })
 
   ws.on('close', () => {
-    emit?.({ type: 'status', value: 'closed' })
+    dispatchSpeechEvent({ type: 'status', value: 'closed' })
   })
 
   return { ok: true as const }
@@ -178,9 +208,15 @@ export async function speechStop() {
   if (!session) return { ok: true as const }
 
   if (session.mock) {
-    if (!session.finalSent) emit?.({ type: 'final', value: speechTranscript })
-    emit?.({ type: 'end' })
-    emit?.({ type: 'status', value: 'closed' })
+    if (!session.finalSent) {
+      const isAr = (session.language || '').toLowerCase().startsWith('ar')
+      const mockText = isAr
+        ? 'مرحباً، تم تحويل الصوت إلى نص بنجاح.'
+        : speechTranscript
+      dispatchSpeechEvent({ type: 'final', value: mockText })
+    }
+    dispatchSpeechEvent({ type: 'end' })
+    dispatchSpeechEvent({ type: 'status', value: 'closed' })
     closeSession()
     return { ok: true as const }
   }

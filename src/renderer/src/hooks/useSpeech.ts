@@ -140,8 +140,9 @@ export function useSpeech() {
   }
 
   const flushIntoInput = () => {
-    const text = finalBufferRef.current.trim()
+    const text = [finalBufferRef.current, transcript].filter(Boolean).join(' ').trim()
     finalBufferRef.current = ''
+    setTranscript('')
     return text
   }
 

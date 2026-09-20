@@ -18,7 +18,7 @@ export function ChatMessage({ message }: { message: ChatMessageT }) {
           className={[
             'mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl border',
             isUser
-              ? 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/40 dark:text-emerald-200'
+              ? 'border-[#00007B]/20 bg-[#00007B]/5 text-[#00007B] dark:border-[#00007B]/40 dark:bg-[#00007B]/20 dark:text-blue-200'
               : 'border-zinc-200 bg-white text-zinc-700 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-200'
           ].join(' ')}
         >
@@ -29,7 +29,7 @@ export function ChatMessage({ message }: { message: ChatMessageT }) {
           className={[
             'min-w-0 rounded-2xl border px-4 py-3 shadow-sm',
             isUser
-              ? 'border-emerald-200 bg-emerald-50/80 dark:border-emerald-900/60 dark:bg-emerald-950/40'
+              ? 'border-[#00007B]/20 bg-[#00007B]/5 dark:border-[#00007B]/40 dark:bg-[#00007B]/20'
               : 'border-zinc-200 bg-white/80 dark:border-zinc-800 dark:bg-zinc-900/60'
           ].join(' ')}
         >

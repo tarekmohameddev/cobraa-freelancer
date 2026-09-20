@@ -39,7 +39,7 @@ export function actionLabel(action: MouseAction) {
     case 'translate':
       return 'Translate'
     case 'ai':
-      return 'AI chat'
+      return 'Cobraa AI'
     case 'voice':
       return 'Voice'
     case 'ocr':

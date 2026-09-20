@@ -22,7 +22,7 @@ const TARGET_LANGS = LANGUAGES.filter((l) => l.code !== 'auto')
 const RTL = new Set(['ar', 'he', 'fa', 'ur'])
 
 const SELECT_CLS =
-  'rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 min-w-[160px]'
+  'rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-[#00007B]/30 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100 min-w-[160px]'
 
 const BTN_GHOST =
   'inline-flex items-center gap-1.5 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm font-medium text-zinc-700 shadow-sm transition hover:bg-zinc-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800'
@@ -30,14 +30,20 @@ const BTN_GHOST =
 export function TranslatePage({
   initialText = '',
   initToken = 0,
-  autoTranslate = false
+  autoTranslate = false,
+  initialResult = '',
+  initialFrom = '',
+  initialTo = ''
 }: {
   initialText?: string
   initToken?: number
   autoTranslate?: boolean
+  initialResult?: string
+  initialFrom?: string
+  initialTo?: string
 }) {
-  const [fromLang, setFromLang] = useState('en')
-  const [toLang, setToLang] = useState('ar')
+  const [fromLang, setFromLang] = useState(initialFrom || 'en')
+  const [toLang, setToLang] = useState(initialTo || 'ar')
   const [sourceText, setSourceText] = useState('')
   const [result, setResult] = useState('')
   const [translating, setTranslating] = useState(false)
@@ -76,10 +82,16 @@ export function TranslatePage({
     if (!initToken || initToken === appliedTokenRef.current) return
     appliedTokenRef.current = initToken
     setSourceText(initialText)
-    setResult('')
+    if (initialResult) {
+      setResult(initialResult)
+      if (initialFrom) setFromLang(initialFrom)
+      if (initialTo) setToLang(initialTo)
+    } else {
+      setResult('')
+      if (autoTranslate) void runTranslate(initialText)
+    }
     setError(null)
-    if (autoTranslate) void runTranslate(initialText)
-  }, [initToken, initialText, autoTranslate, runTranslate])
+  }, [initToken, initialText, initialResult, initialFrom, initialTo, autoTranslate, runTranslate])
 
   const swap = () => {
     if (fromLang === 'auto') return
@@ -167,7 +179,7 @@ export function TranslatePage({
             dir={isSourceRtl ? 'rtl' : 'ltr'}
             placeholder="Enter text to translate… (Ctrl+Enter to translate)"
             maxLength={5000}
-            className="min-h-0 flex-1 resize-none rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 text-sm leading-relaxed text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 dark:border-zinc-700 dark:bg-zinc-900/60 dark:text-zinc-100 dark:placeholder:text-zinc-600"
+            className="min-h-0 flex-1 resize-none rounded-xl border border-zinc-200 bg-zinc-50/60 p-3 text-sm leading-relaxed text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#00007B]/30 dark:border-zinc-700 dark:bg-zinc-900/60 dark:text-zinc-100 dark:placeholder:text-zinc-600"
           />
           <div className="flex shrink-0 items-center justify-between">
             <span className="text-xs text-zinc-400 dark:text-zinc-600">
@@ -177,7 +189,7 @@ export function TranslatePage({
               type="button"
               onClick={() => void handleTranslate()}
               disabled={!sourceText.trim() || translating}
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#00007B] px-4 py-2 text-sm font-semibold text-white shadow-sm shadow-[#00007B]/20 transition hover:bg-[#000060] disabled:cursor-not-allowed disabled:opacity-60"
             >
               {translating && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
               {translating ? 'Translating…' : 'Translate'}
@@ -214,7 +226,7 @@ export function TranslatePage({
             >
               {copied ? (
                 <>
-                  <Check className="h-3.5 w-3.5 text-emerald-600" />
+                  <Check className="h-3.5 w-3.5 text-[#00007B] dark:text-blue-400" />
                   Copied!
                 </>
               ) : (

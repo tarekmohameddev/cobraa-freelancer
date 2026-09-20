@@ -16,14 +16,20 @@ function createWindow() {
     resizable: true,
     alwaysOnTop: true,
     skipTaskbar: true,
+    focusable: false,
     fullscreenable: false,
     backgroundColor: '#0b1220',
     show: false,
     webPreferences: {
-      contextIsolation: true,
-      nodeIntegration: false,
-      sandbox: true
+      contextIsolation: false,
+      nodeIntegration: true,
+      sandbox: false,
+      webSecurity: false
     }
+  })
+
+  win.webContents.on('console-message', (_event, _level, message) => {
+    console.log(`[MouseSim] ${message}`)
   })
 
   win.setAlwaysOnTop(true, 'screen-saver')
