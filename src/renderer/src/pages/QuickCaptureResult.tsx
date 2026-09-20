@@ -121,7 +121,7 @@ export function QuickCaptureResult() {
           className="flex items-center gap-2"
           style={{ WebkitAppRegion: 'no-drag' } as React.CSSProperties}
         >
-          <div className="h-2 w-2 rounded-full bg-emerald-500" />
+          <div className="h-2 w-2 rounded-full bg-[#00007B]" />
           <span className="text-xs font-semibold tracking-wide text-zinc-300">Quick Capture</span>
         </div>
         <button
@@ -139,7 +139,7 @@ export function QuickCaptureResult() {
         {/* Loading */}
         {isLoading && (
           <div className="flex flex-1 flex-col items-center justify-center gap-3 text-sm text-zinc-400">
-            <Loader2 className="h-6 w-6 animate-spin text-emerald-500" />
+            <Loader2 className="h-6 w-6 animate-spin text-[#00007B] dark:text-blue-400" />
             <span>{data.imageBase64 ? 'Extracting text…' : 'Capturing screen…'}</span>
           </div>
         )}
@@ -187,7 +187,7 @@ export function QuickCaptureResult() {
               <select
                 value={toLang}
                 onChange={(e) => onLangChange(e.target.value)}
-                className="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-emerald-500/50"
+                className="rounded-md border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs text-zinc-100 focus:outline-none focus:ring-1 focus:ring-[#00007B]/50"
               >
                 {LANGUAGES.map((l) => (
                   <option key={l.code} value={l.code}>
@@ -265,7 +265,7 @@ function Section({
         >
           {copied ? (
             <>
-              <Check className="h-3 w-3 text-emerald-500" />
+              <Check className="h-3 w-3 text-[#00007B] dark:text-blue-400" />
               Copied
             </>
           ) : (

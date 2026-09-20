@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; connect-src http://127.0.0.1:17321; style-src 'unsafe-inline'" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline'; connect-src http://127.0.0.1:17321 http://localhost:17321; style-src 'unsafe-inline'" />
     <title>Cobraa mouse</title>
     <style>
       :root {
@@ -145,15 +145,15 @@
         <button class="key" data-id="1" type="button">
           <span class="glyph">1</span>
           <span class="meta">
-            <div class="label">AI chat</div>
-            <div class="hint">Click open · double focus</div>
+            <div class="label">Cobraa AI</div>
+            <div class="hint">Click open · hold talk · double overlay</div>
           </span>
         </button>
         <button class="key" data-id="2" type="button">
           <span class="glyph">2</span>
           <span class="meta">
             <div class="label">Translate</div>
-            <div class="hint">Click clipboard · double run</div>
+            <div class="hint">Click: clipboard · Hold: voice translate</div>
           </span>
         </button>
         <button class="key" data-id="3" type="button">
@@ -167,7 +167,7 @@
           <span class="glyph">4</span>
           <span class="meta">
             <div class="label">Voice</div>
-            <div class="hint">Click toggle · hold to talk</div>
+            <div class="hint">Hold to talk · or hold F8 anywhere</div>
           </span>
         </button>
       </div>
@@ -196,10 +196,11 @@
         try {
           const res = await fetch('http://127.0.0.1:' + PORT + '/health')
           connected = res.ok
-        } catch {
+        } catch (err) {
+          console.warn('[mouse-sim] Ping failed:', err)
           connected = false
         }
-        statusEl.textContent = connected ? 'Connected to Cobraa' : 'Waiting for Cobraa… start npm run dev'
+        statusEl.textContent = connected ? 'Connected to Cobraa' : 'Waiting for Cobraa…'
         dot.classList.toggle('on', connected)
       }
 

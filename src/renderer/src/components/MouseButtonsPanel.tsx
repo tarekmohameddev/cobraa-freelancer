@@ -4,8 +4,8 @@ import { getApi, type MouseAction, type MouseServiceStatus } from '@renderer/lib
 
 const ACTIONS: Array<{ id: MouseAction; label: string; hint: string }> = [
   { id: 'translate', label: 'Translate', hint: 'Click: open Translate with clipboard · Double: translate clipboard' },
-  { id: 'ai', label: 'AI chat', hint: 'Click: open chat · Double: focus the composer' },
-  { id: 'voice', label: 'Voice', hint: 'Click: toggle mic · Long press: hold to talk · Double: switch EN/AR' },
+  { id: 'ai', label: 'Cobraa AI', hint: 'Click: open Cobraa AI · Long press: hold to talk · Double: quick prompt overlay' },
+  { id: 'voice', label: 'Voice', hint: 'Hold button (or F8 anywhere) to talk into active app · Release to insert · Double: switch EN/AR' },
   { id: 'ocr', label: 'OCR', hint: 'Click: quick capture · Double: open Image to Text' }
 ]
 

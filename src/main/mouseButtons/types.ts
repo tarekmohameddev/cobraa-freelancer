@@ -32,6 +32,10 @@ export type MouseButtonEvent = {
   gesture: MouseGesture
   signature: string
   clipboardText?: string
+  originalText?: string
+  translatedText?: string
+  from?: string
+  to?: string
 }
 
 export type MouseBindingMap = {

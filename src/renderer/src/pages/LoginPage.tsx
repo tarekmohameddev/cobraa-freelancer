@@ -40,11 +40,11 @@ export function LoginPage() {
 
   return (
     <div className="h-full grid place-items-center p-6">
-      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-emerald-200/50 via-zinc-50 to-sky-200/40 dark:from-emerald-950/40 dark:via-zinc-950 dark:to-sky-950/40" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-br from-[#00007B]/15 via-zinc-50 to-sky-200/40 dark:from-[#00007B]/30 dark:via-zinc-950 dark:to-sky-950/40" />
 
       <div className="w-full max-w-md rounded-2xl border border-white/60 bg-white/70 p-6 shadow-xl backdrop-blur dark:border-white/10 dark:bg-zinc-900/70">
         <div className="flex items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-xl bg-emerald-600 text-white shadow">
+          <div className="grid h-11 w-11 place-items-center rounded-xl bg-[#00007B] text-white shadow">
             <Bot className="h-6 w-6" />
           </div>
           <div className="min-w-0">
@@ -56,7 +56,7 @@ export function LoginPage() {
         </div>
 
         {mock ? (
-          <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-800 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
+          <div className="mt-4 rounded-xl border border-[#00007B]/20 bg-[#00007B]/5 px-3 py-2 text-xs text-[#00007B] dark:border-[#00007B]/40 dark:bg-[#00007B]/20 dark:text-blue-200">
             Vendor APIs are replayed from fixtures. Any password works, or continue without an account.
           </div>
         ) : null}
@@ -64,7 +64,7 @@ export function LoginPage() {
         <form onSubmit={onSubmit} className="mt-6 space-y-3">
           <label className="block">
             <div className="mb-1 text-xs font-medium text-zinc-600 dark:text-zinc-400">Email</div>
-            <div className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm focus-within:ring-2 focus-within:ring-emerald-500/40 dark:border-zinc-800 dark:bg-zinc-950">
+            <div className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm focus-within:ring-2 focus-within:ring-[#00007B]/30 dark:border-zinc-800 dark:bg-zinc-950">
               <Mail className="h-4 w-4 text-zinc-500" />
               <input
                 value={email}
@@ -79,7 +79,7 @@ export function LoginPage() {
 
           <label className="block">
             <div className="mb-1 text-xs font-medium text-zinc-600 dark:text-zinc-400">Password</div>
-            <div className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm focus-within:ring-2 focus-within:ring-emerald-500/40 dark:border-zinc-800 dark:bg-zinc-950">
+            <div className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm focus-within:ring-2 focus-within:ring-[#00007B]/30 dark:border-zinc-800 dark:bg-zinc-950">
               <Lock className="h-4 w-4 text-zinc-500" />
               <input
                 value={password}
@@ -101,7 +101,7 @@ export function LoginPage() {
           <button
             type="submit"
             disabled={!canSubmit}
-            className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-2 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#00007B] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#000060] disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? 'Signing in…' : 'Sign in'}
           </button>

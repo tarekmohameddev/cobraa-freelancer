@@ -27,7 +27,8 @@ function json(res: http.ServerResponse, status: number, payload: unknown) {
     'Content-Length': Buffer.byteLength(body),
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type'
+    'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Request-Private-Network',
+    'Access-Control-Allow-Private-Network': 'true'
   })
   res.end(body)
 }
@@ -48,7 +49,8 @@ export function startSimulatorBridge() {
       res.writeHead(204, {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type'
+        'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Request-Private-Network',
+        'Access-Control-Allow-Private-Network': 'true'
       })
       res.end()
       return

@@ -1,10 +1,11 @@
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
-import { BrowserWindow, app, clipboard } from 'electron'
+import { BrowserWindow, Notification, app, clipboard } from 'electron'
 import { debugLog } from '../debug'
 import { createGestureDetector } from './gestures'
 import { loadBindings, saveBindings } from './mapping'
+import { translateClipboard } from '../translate'
 import type {
   MouseAction,
   MouseBindingMap,
@@ -17,6 +18,17 @@ import type {
 import { setBoundSignatures, setLearnMode, startWindowsInput, stopWindowsInput } from './windowsInput'
 import { setSimulatorInjector, startSimulatorBridge, stopSimulatorBridge } from './simulator'
 import { DEFAULT_SIM_BINDINGS } from './simSignatures'
+import { openAiOverlay } from '../aiOverlay'
+import {
+  isVoiceDictating,
+  isVoiceTranslating,
+  startVoiceDictation,
+  startVoiceTranslation,
+  stopVoiceDictation,
+  stopVoiceTranslation,
+  toggleVoiceLanguage
+} from '../voiceDictation'
+import { updateLastExternalHwnd } from '../windowsTextInsertion'
 
 let child: ChildProcessWithoutNullStreams | null = null
 let bindings: MouseBindingMap = { version: 1, bindings: {} }
@@ -29,12 +41,104 @@ let error: string | null = null
 let getWindow: () => BrowserWindow | null = () => null
 
 const gestures = createGestureDetector((evt) => {
-  const clipboardText = evt.action === 'translate' ? clipboard.readText().trim() : ''
+  const clipboardText = (evt.action === 'translate' || evt.action === 'ai') ? clipboard.readText().trim() : ''
   const payload: MouseButtonEvent = clipboardText ? { ...evt, clipboardText } : evt
   lastEvent = payload
   debugLog('mouse:gesture', payload)
+
+  if (evt.action === 'voice') {
+    if (evt.gesture === 'down') {
+      updateLastExternalHwnd()
+    } else if (evt.gesture === 'long') {
+      void startVoiceDictation()
+    } else if (evt.gesture === 'up') {
+      if (isVoiceDictating()) {
+        void stopVoiceDictation()
+      }
+    } else if (evt.gesture === 'double') {
+      toggleVoiceLanguage()
+    } else if (evt.gesture === 'click') {
+      if (isVoiceDictating()) {
+        void stopVoiceDictation()
+      } else {
+        void startVoiceDictation()
+      }
+    }
+    const win = getWindow()
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('mouse:button', payload)
+    }
+    return
+  }
+
+  if (evt.action === 'translate') {
+    if (evt.gesture === 'down') {
+      updateLastExternalHwnd()
+    } else if (evt.gesture === 'long') {
+      void startVoiceTranslation()
+    } else if (evt.gesture === 'up') {
+      if (isVoiceTranslating()) {
+        void stopVoiceTranslation()
+      }
+    } else if (evt.gesture === 'click' || evt.gesture === 'double') {
+      if (isVoiceTranslating()) {
+        void stopVoiceTranslation()
+        return
+      }
+      void (async () => {
+        const result = await translateClipboard()
+        const enrichedPayload: MouseButtonEvent = {
+          ...payload,
+          clipboardText: result?.translated || payload.clipboardText,
+          originalText: result?.original || payload.clipboardText,
+          translatedText: result?.translated,
+          from: result?.from,
+          to: result?.to
+        }
+        lastEvent = enrichedPayload
+        debugLog('mouse:translated', enrichedPayload)
+
+        const win = getWindow()
+        if (win && !win.isDestroyed()) {
+          win.webContents.send('mouse:button', enrichedPayload)
+        }
+
+        if (result?.translated) {
+          try {
+            if (Notification.isSupported()) {
+              new Notification({
+                title: 'Cobraa Translate',
+                body: `Copied to clipboard: "${result.translated.slice(0, 80)}${result.translated.length > 80 ? '...' : ''}"`
+              }).show()
+            }
+          } catch {
+            // ignore notification error
+          }
+        }
+      })()
+    }
+    const win = getWindow()
+    if (win && !win.isDestroyed()) {
+      win.webContents.send('mouse:button', payload)
+    }
+    return
+  }
+
+  if (evt.action === 'ai' && evt.gesture === 'double') {
+    const text = clipboard.readText().trim()
+    openAiOverlay(text)
+    return
+  }
+
   const win = getWindow()
-  if (win && !win.isDestroyed()) win.webContents.send('mouse:button', payload)
+  if (win && !win.isDestroyed()) {
+    if (evt.action === 'ai' && (evt.gesture === 'click' || evt.gesture === 'long')) {
+      if (win.isMinimized()) win.restore()
+      if (!win.isVisible()) win.show()
+      win.focus()
+    }
+    win.webContents.send('mouse:button', payload)
+  }
 })
 
 function daemonScript(): string | null {

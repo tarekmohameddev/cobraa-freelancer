@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import { AuthProvider, useAuth } from '@renderer/context/AuthContext'
 import { LoginPage } from '@renderer/pages/LoginPage'
 import { AppShell } from '@renderer/components/AppShell'
+import { useGlobalVoiceDictation } from '@renderer/hooks/useGlobalVoiceDictation'
 
 function useTheme() {
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -22,6 +23,7 @@ function useTheme() {
 function InnerApp() {
   const { session, loading } = useAuth()
   const { theme, setTheme } = useTheme()
+  useGlobalVoiceDictation()
 
   const content = useMemo(() => {
     if (loading) {
